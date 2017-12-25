@@ -55,10 +55,10 @@ public class MainActivity extends AppCompatActivity implements EventListener, Vi
             wakeup.registerListener(this); //  EventListener 中 onEvent方法
         }
 
-//        //加载离线引擎
-//        if (enableOffline) {
-//            loadOfflineEngine(); //测试离线命令词请开启, 测试 ASR_OFFLINE_ENGINE_GRAMMER_FILE_PATH 参数时开启
-//        }
+        //加载离线引擎
+        if (enableOffline) {
+            loadOfflineEngine(); //测试离线命令词请开启, 测试 ASR_OFFLINE_ENGINE_GRAMMER_FILE_PATH 参数时开启
+        }
 
         startWakeUp();
     }

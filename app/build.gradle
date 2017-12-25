@@ -33,4 +33,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.2.0'
     testCompile 'junit:junit:4.12'
     compile files('libs/bdasr_V3_20170929_c8984af.jar')
+    compile files('libs/com.baidu.tts_2.3.1.20170808_e39ea89.jar')
 }
