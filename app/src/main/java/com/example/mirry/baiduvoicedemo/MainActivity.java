@@ -5,18 +5,13 @@ import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -43,12 +38,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static com.example.mirry.baiduvoicedemo.MainHandlerConstant.PRINT;
-import static com.example.mirry.baiduvoicedemo.MainHandlerConstant.UI_CHANGE_INPUT_TEXT_SELECTION;
-import static com.example.mirry.baiduvoicedemo.MainHandlerConstant.UI_CHANGE_SYNTHES_TEXT_SELECTION;
-
 public class MainActivity extends Activity implements EventListener, View.OnClickListener {
-    Button online,offline,wakeupApp;
+    Button online,tts,wakeupApp;
 
 
     private EventManager asr;
@@ -140,13 +131,13 @@ public class MainActivity extends Activity implements EventListener, View.OnClic
 
     private void initListener() {
         online.setOnClickListener(this);
-        offline.setOnClickListener(this);
+        tts.setOnClickListener(this);
         wakeupApp.setOnClickListener(this);
     }
 
     private void initView() {
         online = (Button) findViewById(R.id.online);
-        offline = (Button) findViewById(R.id.offline);
+        tts = (Button) findViewById(R.id.tts);
         wakeupApp = (Button) findViewById(R.id.wakeup);
     }
 
@@ -187,8 +178,9 @@ public class MainActivity extends Activity implements EventListener, View.OnClic
             case R.id.online:
                 startAsr();
                 break;
-            case R.id.offline:
-                loadOfflineEngine();
+            case R.id.tts:
+                initialTts();
+
                 break;
             case R.id.wakeup:
                 startWakeUp();
@@ -228,7 +220,7 @@ public class MainActivity extends Activity implements EventListener, View.OnClic
         // appId appKey secretKey 网站上您申请的应用获取。注意使用离线合成功能的话，需要应用中填写您app的包名。包名在build.gradle中获取。
         InitConfig initConfig = new InitConfig(appId, appKey, appSecret, ttsMode, offlineVoice, params, listener);
 
-        synthesizer = new NonBlockSyntherizer(this, initConfig, mainHandler); // 此处可以改为MySyntherizer 了解调用过程
+        synthesizer = new MySyntherizer(this, initConfig, mainHandler); // 此处可以改为MySyntherizer 了解调用过程
     }
 
     /**

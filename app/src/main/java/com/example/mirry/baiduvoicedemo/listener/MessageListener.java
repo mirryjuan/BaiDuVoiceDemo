@@ -4,7 +4,7 @@ import android.util.Log;
 
 import com.baidu.tts.client.SpeechError;
 import com.baidu.tts.client.SpeechSynthesizerListener;
-import com.baidu.tts.sample.MainHandlerConstant;
+import com.example.mirry.baiduvoicedemo.MainHandlerConstant;
 
 /**
  * SpeechSynthesizerListener 简单地实现，仅仅记录日志

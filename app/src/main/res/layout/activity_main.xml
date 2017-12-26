@@ -10,17 +10,17 @@
         android:id="@+id/online"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="在线识别"/>
-    <Button
-        android:id="@+id/offline"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="离线识别"
-        android:layout_below="@+id/online"/>
+        android:text="离在线语音识别"/>
     <Button
         android:id="@+id/wakeup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="语音唤醒"
-        android:layout_below="@+id/offline"/>
+        android:layout_below="@+id/online"/>
+    <Button
+        android:id="@+id/tts"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="语音合成"
+        android:layout_below="@+id/wakeup"/>
 </RelativeLayout>
