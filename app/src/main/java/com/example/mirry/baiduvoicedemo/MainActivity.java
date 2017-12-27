@@ -13,6 +13,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -58,14 +59,16 @@ public class MainActivity extends Activity implements EventListener, View.OnClic
     // TtsMode.MIX; 离在线融合，在线优先； TtsMode.ONLINE 纯在线； 没有纯离线
     protected TtsMode ttsMode = TtsMode.MIX;
 
-    // 离线发音选择，VOICE_FEMALE即为离线女声发音。
-    // assets目录下bd_etts_speech_female.data为离线男声模型；bd_etts_speech_female.data为离线女声模型
+    // assets目录下bd_etts_speech_male.data为离线男声模型；bd_etts_speech_female.data为离线女声模型
     protected String offlineVoice = OfflineResource.VOICE_FEMALE;
 
     // 主控制类，所有合成控制方法从这个类开始
     protected MySyntherizer synthesizer;
 
     protected Handler mainHandler;
+
+    private Boolean longPressed = false;     //是否长按
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,6 +111,24 @@ public class MainActivity extends Activity implements EventListener, View.OnClic
         switch (what) {
             case SPEECH_FINISH:
                 startAsr();
+                break;
+            case 100:
+                Bundle data = msg.getData();
+                //按键值
+                int keyCode = data.getInt("key_code");
+                if(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE == keyCode || KeyEvent.KEYCODE_HEADSETHOOK == keyCode) {
+                    Boolean isLongPressed = data.getBoolean("longPressed");
+
+                    if (!isLongPressed) {
+                        stop();
+                        // 开始监测语法识别
+                        startAsr();
+                    } else {
+                        // 开始监测语法识别
+                        startAsr();
+                        Log.i(TAG, "调出提示框");
+                    }
+                }
                 break;
             default:
                 break;
@@ -414,6 +435,9 @@ public class MainActivity extends Activity implements EventListener, View.OnClic
                         case 9:
                             speak("打开录音机失败，请检查录音权限是否开启");
                             break;
+                        default:
+                            speak("请再说一遍");
+                            break;
                     }
                 }
             } catch (JSONException e) {
@@ -441,7 +465,7 @@ public class MainActivity extends Activity implements EventListener, View.OnClic
             try {
                 JSONObject json = new JSONObject(params);
                 int volume = json.getInt("volume");
-                Toast.makeText(this, "当前音量："+ volume, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "语音识别中,当前音量大小："+ volume, Toast.LENGTH_SHORT).show();
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -461,7 +485,11 @@ public class MainActivity extends Activity implements EventListener, View.OnClic
             case "你好":
                 speak("你也好");
                 break;
+            case "二百二十千伏根电一回":
+                speak("好的，开始巡视二百二十千伏根电一回");
+                break;
             default:
+                speak("我不知道您说的什么，请再说一遍");
                 break;
         }
     }
@@ -473,6 +501,47 @@ public class MainActivity extends Activity implements EventListener, View.OnClic
         wakeup.send(SpeechConstant.WAKEUP_STOP, "{}", null, 0, 0);
         if (enableOffline) {
             unloadOfflineEngine(); //测试离线命令词请开启, 测试 ASR_OFFLINE_ENGINE_GRAMMER_FILE_PATH 参数时开启
+        }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if(keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN){
+            Message msg = Message.obtain();
+            msg.what = 100;
+            Bundle data = new Bundle();
+            data.putInt("key_code", keyCode);
+            msg.setData(data);
+            mainHandler.sendMessage(msg);
+            return true;
+        }else if(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE == keyCode || KeyEvent.KEYCODE_HEADSETHOOK == keyCode){
+            if(event.getRepeatCount() == 0) {  //如果长按的话，getRepeatCount值会一直变大
+                //短按
+                longPressed = false;
+            }else {
+                //长按
+                longPressed = true;
+            }
+
+            return true;
+        }else{
+            return super.onKeyDown(keyCode, event);
+        }
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE == keyCode || KeyEvent.KEYCODE_HEADSETHOOK == keyCode){
+            Message msg = Message.obtain();
+            msg.what = 100;
+            Bundle data = new Bundle();
+            data.putInt("key_code", keyCode);
+            data.putBoolean("longPressed", longPressed);
+            msg.setData(data);
+            mainHandler.sendMessage(msg);
+            return true;
+        }else{
+            return super.onKeyUp(keyCode, event);
         }
     }
 }

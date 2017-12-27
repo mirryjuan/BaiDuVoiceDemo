@@ -32,7 +32,7 @@ public class MySyntherizer implements MainHandlerConstant {
     protected OfflineResource offlineResource;
     protected Handler mainHandler;
 
-    private final String TAG = "NonBlockSyntherizer";
+    private final String TAG = "MySyntherizer";
 
     private static boolean isInitied = false;
 
