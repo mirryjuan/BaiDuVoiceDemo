@@ -106,7 +106,6 @@ public class MySyntherizer implements MainHandlerConstant {
         }
         // 此时可以调用 speak和synthesize方法
         sendToUiThread(INIT_SUCCESS, "合成引擎初始化成功");
-        speak("你好，我是小芮");
         return true;
     }
 

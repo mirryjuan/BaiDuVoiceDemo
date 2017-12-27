@@ -6,21 +6,9 @@
     android:layout_height="match_parent"
     tools:context="com.example.mirry.baiduvoicedemo.MainActivity">
 
-    <Button
-        android:id="@+id/online"
+    <TextView
+        android:id="@+id/text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="离在线语音识别"/>
-    <Button
-        android:id="@+id/wakeup"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="语音唤醒"
-        android:layout_below="@+id/online"/>
-    <Button
-        android:id="@+id/tts"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="语音合成"
-        android:layout_below="@+id/wakeup"/>
+        android:text="这里显示识别的结果"/>
 </RelativeLayout>

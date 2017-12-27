@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.baidu.speech.EventListener;
@@ -26,10 +27,10 @@ import com.baidu.tts.client.SpeechSynthesizerListener;
 import com.baidu.tts.client.TtsMode;
 import com.example.mirry.baiduvoicedemo.config.InitConfig;
 import com.example.mirry.baiduvoicedemo.config.MySyntherizer;
-import com.example.mirry.baiduvoicedemo.config.NonBlockSyntherizer;
 import com.example.mirry.baiduvoicedemo.listener.UiMessageListener;
 import com.example.mirry.baiduvoicedemo.utils.OfflineResource;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -38,9 +39,12 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class MainActivity extends Activity implements EventListener, View.OnClickListener {
-    Button online,tts,wakeupApp;
+import static com.example.mirry.baiduvoicedemo.MainHandlerConstant.SPEECH_FINISH;
 
+public class MainActivity extends Activity implements EventListener, View.OnClickListener {
+    public static final String TAG = "MainActivity";
+
+    TextView text;
 
     private EventManager asr;
     private EventManager wakeup;
@@ -56,7 +60,7 @@ public class MainActivity extends Activity implements EventListener, View.OnClic
 
     // 离线发音选择，VOICE_FEMALE即为离线女声发音。
     // assets目录下bd_etts_speech_female.data为离线男声模型；bd_etts_speech_female.data为离线女声模型
-    protected String offlineVoice = OfflineResource.VOICE_MALE;
+    protected String offlineVoice = OfflineResource.VOICE_FEMALE;
 
     // 主控制类，所有合成控制方法从这个类开始
     protected MySyntherizer synthesizer;
@@ -95,12 +99,16 @@ public class MainActivity extends Activity implements EventListener, View.OnClic
             loadOfflineEngine(); //测试离线命令词请开启, 测试 ASR_OFFLINE_ENGINE_GRAMMER_FILE_PATH 参数时开启
         }
 
-        startWakeUp();
+        startWakeUp();    //开启语音唤醒
+        initialTts();     //开启语音合成
     }
 
     protected void handle(Message msg) {
         int what = msg.what;
         switch (what) {
+            case SPEECH_FINISH:
+                startAsr();
+                break;
             default:
                 break;
         }
@@ -130,15 +138,11 @@ public class MainActivity extends Activity implements EventListener, View.OnClic
     }
 
     private void initListener() {
-        online.setOnClickListener(this);
-        tts.setOnClickListener(this);
-        wakeupApp.setOnClickListener(this);
+
     }
 
     private void initView() {
-        online = (Button) findViewById(R.id.online);
-        tts = (Button) findViewById(R.id.tts);
-        wakeupApp = (Button) findViewById(R.id.wakeup);
+        text = (TextView) findViewById(R.id.text);
     }
 
     private void startAsr() {
@@ -148,7 +152,7 @@ public class MainActivity extends Activity implements EventListener, View.OnClic
         if (enableOffline){
             params.put(SpeechConstant.DECODER, 2);
         }
-        params.put(SpeechConstant.ACCEPT_AUDIO_VOLUME, false);
+        params.put(SpeechConstant.ACCEPT_AUDIO_VOLUME, true);
         params.put(SpeechConstant.VAD,SpeechConstant.VAD_DNN);
 
         params.put(SpeechConstant.NLU, "enable");
@@ -161,7 +165,7 @@ public class MainActivity extends Activity implements EventListener, View.OnClic
 
         asr.send(event, json, null, 0, 0);
 
-        Log.i(getClass().getName(), "输入参数：" + json);
+        Log.i(TAG, "输入参数：" + json);
     }
 
     private void stopAsr() {
@@ -175,16 +179,6 @@ public class MainActivity extends Activity implements EventListener, View.OnClic
     @Override
     public void onClick(View v) {
         switch (v.getId()){
-            case R.id.online:
-                startAsr();
-                break;
-            case R.id.tts:
-                initialTts();
-
-                break;
-            case R.id.wakeup:
-                startWakeUp();
-                break;
             default:
                 break;
         }
@@ -254,8 +248,17 @@ public class MainActivity extends Activity implements EventListener, View.OnClic
 
     private void checkResult(int result, String method) {
         if (result != 0) {
-            Log.i("sss","error code :" + result + " method:" + method + ", 错误码文档:http://yuyin.baidu.com/docs/tts/122 ");
+            Log.i(TAG,"error code :" + result + " method:" + method + ", 错误码文档:http://yuyin.baidu.com/docs/tts/122 ");
         }
+    }
+
+    /**
+     * 开始播放
+     */
+    public void speak(String text) {
+        Log.i(TAG, "speak text:" + text);
+        int result = synthesizer.speak(text);
+        checkResult(result, "speak");
     }
 
     /**
@@ -345,7 +348,7 @@ public class MainActivity extends Activity implements EventListener, View.OnClic
                 int errorCode = json.getInt("errorCode");
                 if(errorCode == 0){
                     //唤醒成功
-                    Toast.makeText(this, "唤醒成功", Toast.LENGTH_SHORT).show();
+                    speak("你好，我是小瑞，我能为您做些什么？");
                 } else {
                     //唤醒失败
                     Toast.makeText(this, "唤醒失败", Toast.LENGTH_SHORT).show();
@@ -359,33 +362,108 @@ public class MainActivity extends Activity implements EventListener, View.OnClic
         }
 
         if(name.equals(SpeechConstant.CALLBACK_EVENT_ASR_LOADED)){
-            Toast.makeText(this, "离线模式加载成功", Toast.LENGTH_SHORT).show();
+            Log.i(TAG, "离线模式加载成功");
         }
 
         if(name.equals(SpeechConstant.CALLBACK_EVENT_ASR_READY)){
             // 引擎就绪，可以说话，一般在收到此事件后通过UI通知用户可以说话了
-            Toast.makeText(this, "开始识别", Toast.LENGTH_SHORT).show();
+            Log.i(TAG, "开始识别");
         }else if(name.equals(SpeechConstant.CALLBACK_EVENT_ASR_BEGIN)){
             // 检测到说话开始
-            Toast.makeText(this, "开始说话", Toast.LENGTH_SHORT).show();
+            Log.i(TAG, "开始说话");
         }else if(name.equals(SpeechConstant.CALLBACK_EVENT_ASR_END)){
             // 检测到说话结束
-            Toast.makeText(this, "结束说话", Toast.LENGTH_SHORT).show();
+            Log.i(TAG, "结束说话");
         }else if(name.equals(SpeechConstant.CALLBACK_EVENT_ASR_FINISH)){
             // 识别结束
-            Toast.makeText(this, "结束识别", Toast.LENGTH_SHORT).show();
+            Log.i(TAG, "结束识别");
+            try {
+                JSONObject json = new JSONObject(params);
+                int errCode = json.getInt("error");
+                if(errCode != 0) {
+                    int subErrCode = json.getJSONObject("origin_result").getInt("sub_error");
+                    String errorDesc = json.getJSONObject("origin_result").getString("desc");
+                    Log.i(TAG, subErrCode + ":" + errorDesc);
+                    switch (errCode){
+                        case 1:
+                        case 2:
+                            speak("当前网络信号较弱，请检查网络连接");
+                            break;
+                        case 3:
+                            switch (subErrCode){
+                                case 3001:
+                                case 3002:
+                                case 3003:
+                                case 3006:
+                                    speak("打开录音机失败，请检查录音权限是否开启");
+                                    break;
+                                case 3101:
+                                case 3102:
+                                    speak("您没有说话");
+                                    break;
+                                default:
+                                    break;
+                            }
+                            break;
+                        case 4:
+                            Log.i(TAG, "appid和appkey的鉴权失败");
+                            break;
+                        case 7:
+                            speak("当前环境太嘈杂，请避开嘈杂的环境");
+                            break;
+                        case 9:
+                            speak("打开录音机失败，请检查录音权限是否开启");
+                            break;
+                    }
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }else if (name.equals(SpeechConstant.CALLBACK_EVENT_ASR_PARTIAL)) {
             //识别结果
-            if (params.contains("\"nlu_result\"")) {
-                if (length > 0 && data.length > 0) {
-                    logTxt += ", 语义解析结果：" + new String(data, offset, length);
+            if(params.contains("final_result")){
+                try {
+                    Log.i(TAG, "识别成功");
+                    String words = "";
+                    JSONObject json = new JSONObject(params);
+                    JSONArray result = json.getJSONArray("results_recognition");
+                    for(int i = 0; i < result.length(); i++){
+                        words += result.getString(i);
+                    }
+
+                    processResult(words);
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
+            }
+        } else if(name.equals(SpeechConstant.CALLBACK_EVENT_ASR_VOLUME)){
+            try {
+                JSONObject json = new JSONObject(params);
+                int volume = json.getInt("volume");
+                Toast.makeText(this, "当前音量："+ volume, Toast.LENGTH_SHORT).show();
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
         } else if (data != null) {
             logTxt += " ;data length=" + data.length;
         }
 
-        Log.i(getClass().getName(), logTxt);
+        Log.i(TAG, logTxt);
+    }
+
+    private void processResult(String words) {
+        text.setText(words);
+        switch (words){
+            case "小瑞":
+                speak("我是小芮");
+                break;
+            case "你好":
+                speak("你也好");
+                break;
+            default:
+                break;
+        }
     }
 
     @Override
